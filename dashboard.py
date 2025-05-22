@@ -8,18 +8,19 @@ st.title("Порівняльний аналіз ІТ-галузі: Індія, �
 st.write("Цей дашборд дозволяє аналізувати ключові показники ІТ-галузі в чотирьох країнах.")
 
 # Завантаження даних
-uploaded_file = st.file_uploader("data.csv", type=["csv"])
+uploaded_file = st.file_uploader("Завантажте CSV-файл", type=["csv"])
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-    st.write("Дані успішно завантажено:")
-    st.markdown(df.head().to_html(), unsafe_allow_html=True)  # Відображення як HTML-таблиця
+
+    # Округлення року до цілого
+    df["Year"] = df["Year"].round().astype(int)
 
     # Фільтри
     countries = df["Country"].unique()
     selected_countries = st.multiselect("Оберіть країни", options=countries, default=countries)
-    years = df["Year"].unique()
+    years = sorted(df["Year"].unique())
     selected_years = st.multiselect("Оберіть роки", options=years, default=[years[0]]) 
-    
+
     # Фільтрація даних
     filtered_df = df[(df["Country"].isin(selected_countries)) & (df["Year"].isin(selected_years))]
 
@@ -38,18 +39,29 @@ if uploaded_file is not None:
     # Візуалізація: вертикальна стовпчаста діаграма з групуванням за роками
     st.subheader(f"Порівняння: {metric_names[selected_metric]} за обрані роки")
     filtered_df["Country_Year"] = filtered_df["Country"] + " (" + filtered_df["Year"].astype(str) + ")"
-    
-    fig = px.bar(filtered_df, x="Country_Year", y=selected_metric, color="Year", 
-                 title=f"{metric_names[selected_metric]} за {', '.join(map(str, selected_years))} роки",
-                 labels={selected_metric: metric_names[selected_metric], "Country_Year": "Країна (Рік)"},
-                 text_auto=True)  
-    fig.update_traces(textposition='auto')  
-    fig.update_layout(
-        barmode="group",  
-        bargap=0.2, 
-        bargroupgap=0.1,  
-        xaxis={'tickangle': 45}  
+
+    # Переконатися, що метрика числова
+    filtered_df[selected_metric] = pd.to_numeric(filtered_df[selected_metric], errors="coerce")
+
+    fig = px.bar(
+        filtered_df,
+        x="Country_Year",
+        y=selected_metric,
+        color="Country",
+        title=f"{metric_names[selected_metric]} за {', '.join(map(str, selected_years))} роки",
+        labels={selected_metric: metric_names[selected_metric], "Country_Year": "Країна (Рік)"},
+        text=selected_metric
     )
+
+    fig.update_traces(textposition='outside')
+    fig.update_layout(
+        barmode="group",
+        bargap=0.2,
+        bargroupgap=0.1,
+        xaxis={'tickangle': 45},
+        yaxis_title=metric_names[selected_metric]
+    )
+
     st.plotly_chart(fig)
 
     # Додаткова візуалізація: кругова діаграма (за один рік, якщо обрано кілька, то для першого)
@@ -73,11 +85,4 @@ if uploaded_file is not None:
 else:
     st.write("Будь ласка, завантажте CSV-файл із даними для аналізу.")
 
-# # Інструкція
-# st.sidebar.header("Інструкція")
-# st.sidebar.write("""
-# 1. Завантажте CSV-файл із даними.
-# 2. Оберіть країни та роки для аналізу.
-# 3. Виберіть показник для візуалізації.
-# 4. Перегляньте графіки та висновки.
-# """)
+# streamlit run
