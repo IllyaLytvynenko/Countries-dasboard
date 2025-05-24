@@ -100,6 +100,34 @@ if uploaded_file is not None:
     )
 
     st.plotly_chart(fig_line)
+        # Теплова карта: порівняння показників по країнах і роках
+    st.subheader(f"Теплова карта: {metric_names[selected_metric]}")
+
+    heatmap_df = df[df["Country"].isin(selected_countries)]
+    heatmap_data = heatmap_df.pivot_table(
+        index="Country",
+        columns="Year",
+        values=selected_metric,
+        aggfunc="sum"
+    )
+
+    fig_heatmap = px.imshow(
+        heatmap_data,
+        labels=dict(x="Рік", y="Країна", color=metric_names[selected_metric]),
+        x=heatmap_data.columns,
+        y=heatmap_data.index,
+        color_continuous_scale="Blues",
+        text_auto=True
+    )
+
+    fig_heatmap.update_layout(
+        title=f"Теплова карта: {metric_names[selected_metric]} по країнах і роках",
+        xaxis_title="Рік",
+        yaxis_title="Країна"
+    )
+
+    st.plotly_chart(fig_heatmap)
+
     # Короткий висновок (для кожного року)
     if not filtered_df.empty:
         st.subheader("Висновки")
@@ -113,4 +141,5 @@ if uploaded_file is not None:
 else:
     st.write("Будь ласка, завантажте CSV-файл із даними для аналізу.")
 
+# streamlit run
 # streamlit run
