@@ -58,20 +58,48 @@ if uploaded_file is not None:
         barmode="group",
         bargap=0.2,
         bargroupgap=0.1,
-        xaxis={'tickangle': 45},
-        yaxis_title=metric_names[selected_metric]
+        xaxis={'tickangle': 200},
+        yaxis_title=metric_names[selected_metric],
     )
 
     st.plotly_chart(fig)
 
     # Додаткова візуалізація: кругова діаграма (за один рік, якщо обрано кілька, то для першого)
     if len(selected_years) > 0:
-        single_year_df = filtered_df[filtered_df["Year"] == selected_years[0]]
-        st.subheader(f"Розподіл: {metric_names[selected_metric]} за {selected_years[0]} рік")
-        fig_pie = px.pie(single_year_df, names="Country", values=selected_metric,
-                         title=f"Розподіл {metric_names[selected_metric]} у {selected_years[0]}")
-        st.plotly_chart(fig_pie)
+          if len(selected_years) > 0:
 
+            single_year_df = filtered_df[filtered_df["Year"] == selected_years[0]]
+
+            st.subheader(f"Розподіл: {metric_names[selected_metric]} за {selected_years[0]} рік")
+
+            fig_pie = px.pie(single_year_df, names="Country", values=selected_metric,
+
+            title=f"Розподіл {metric_names[selected_metric]} у {selected_years[0]}")
+    st.plotly_chart(fig_pie)
+        # Додаткова візуалізація: динаміка по роках (лінійний графік)
+    st.subheader(f"Динаміка: {metric_names[selected_metric]} у часі")
+
+    line_df = df[df["Country"].isin(selected_countries)]
+    line_df = line_df[["Year", "Country", selected_metric]].dropna()
+    line_df[selected_metric] = pd.to_numeric(line_df[selected_metric], errors="coerce")
+
+    fig_line = px.line(
+        line_df,
+        x="Year",
+        y=selected_metric,
+        color="Country",
+        markers=True,
+        title=f"Зміна {metric_names[selected_metric]} з часом",
+        labels={selected_metric: metric_names[selected_metric], "Year": "Рік"}
+    )
+
+    fig_line.update_layout(
+        yaxis_title=metric_names[selected_metric],
+        xaxis=dict(dtick=1),
+        legend_title_text='Країна'
+    )
+
+    st.plotly_chart(fig_line)
     # Короткий висновок (для кожного року)
     if not filtered_df.empty:
         st.subheader("Висновки")
