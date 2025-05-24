@@ -58,7 +58,7 @@ if uploaded_file is not None:
         barmode="group",
         bargap=0.2,
         bargroupgap=0.1,
-        xaxis={'tickangle': 200},
+        xaxis={'tickangle': 45},
         yaxis_title=metric_names[selected_metric],
     )
 
